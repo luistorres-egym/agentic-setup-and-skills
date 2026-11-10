@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 import stat
 import subprocess
@@ -61,6 +62,21 @@ class SetupTests(unittest.TestCase):
             capture_output=True, text=True,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_setup_rejects_package_without_setup_guide(self):
+        source = self.root / "source"
+        shutil.copytree(SCRIPTS.parent, source, ignore=shutil.ignore_patterns("__pycache__", ".DS_Store"))
+        (source / "references" / "setup.md").unlink()
+        project = self.root / "project"
+        project.mkdir()
+        result = subprocess.run(
+            [sys.executable, "-I", "-B", str(source / "scripts" / "setup.py"), str(project)],
+            capture_output=True, text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Skill package is incomplete", result.stderr + result.stdout)
+        self.assertFalse((project / "AGENTS.md").exists())
+        self.assertFalse((project / ".agents").exists())
 
     def test_existing_project_skill_allows_runtime_cache_and_finder_metadata(self):
         destination = self.root / ".agents" / "skills" / "project-context-router-egym"

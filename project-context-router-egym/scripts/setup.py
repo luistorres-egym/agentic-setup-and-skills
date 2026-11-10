@@ -184,7 +184,7 @@ def setup(
             Path("SKILL.md"), Path("scripts/setup.py"), Path("scripts/validate.py"),
             Path("references/routing-table-template.md"), Path("references/context-md-template.md"),
             Path("references/validation-and-navigation.md"), Path("references/optional-route-selection.md"),
-            Path("references/architecture-overview.md"),
+            Path("references/architecture-overview.md"), Path("references/setup.md"),
         )
         if any(path.is_symlink() for path in source_entries.values()):
             raise SetupError("Cannot install a skill package containing symlinks.")

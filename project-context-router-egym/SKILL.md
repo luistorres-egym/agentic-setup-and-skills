@@ -18,12 +18,15 @@ the router is installed. If the user requests only a read-only check, report
 findings without repairing. Setup creates missing routing files and appends
 root pointers; it preserves existing content and does not infer routes or
 migrate older routing automatically.
+Before initial setup, read and follow [the setup guide](references/setup.md).
+Also read it before adding a selected entry point or optional map to an
+existing project.
 
 ## Before setup or verification — Install the skill in the project
 
 Determine the loaded skill's actual base directory using the host's skill
 metadata and verify the complete matching package, including `SKILL.md`,
-`scripts/setup.py`, `scripts/validate.py`, and referenced templates. Do not
+`scripts/setup.py`, `scripts/validate.py`, and referenced guides and templates. Do not
 substitute files from a different copy or version. If the source is missing or
 incomplete, ask the user for the trusted complete package; do not fabricate
 files or download an unspecified version.
@@ -98,24 +101,9 @@ CLAUDE.md                  # optional
 
 - Root `AGENTS.md` points to `.context-routing/index.md`. Preserve unrelated
   instructions and managed blocks; keep routing tables in the routing folder.
-- Pass `--claude-md` to create or update `CLAUDE.md` when Claude routing is
-  selected. If the file is missing, the flag creates it with only `@AGENTS.md`.
-  Without `CLAUDECODE`, an existing file with that import is left unchanged; an
-  existing file without it gains the index import and pointer but not an
-  `@AGENTS.md` import. When `CLAUDECODE` is set, add a normal Markdown pointer
-  to the index to an existing `CLAUDE.md` if missing, preserving its contents
-  and without adding an index import. For compatibility, `CLAUDECODE` without
-  the flag creates a missing file with `@AGENTS.md`, the index import and a
-  routing pointer.
-- If an existing root `CLAUDE.md` is a symlink directly to the regular root
-  `AGENTS.md`, leave the symlink untouched and update `AGENTS.md` only. Do not
-  add `@AGENTS.md` to the shared file. Reject other symlink targets when
-  `CLAUDE.md` is selected, including broken links.
-- If GitHub.com Copilot Chat support is selected, pass
-  `--copilot-instructions` to create or update `.github/copilot-instructions.md`
-  with a relative pointer to the same index. Preserve existing instructions.
-  Chat must have the repository attached, and following the pointer depends on
-  the surface and available context; do not assume links are expanded.
+- `CLAUDE.md` and `.github/copilot-instructions.md` are optional entry points
+  for selected clients. Preserve existing instructions and symlinks; follow
+  the setup guide's entry-point and symlink rules before changing them.
 - `index.md` contains the folder-to-context table, reading order, maintenance
   contract, and links to selected optional maps. It holds routing, not domain detail.
 - `skills.md` optionally routes tasks to selected skills; `specialists.md`
@@ -128,34 +116,6 @@ older routing. If a manual migration is requested, preserve unrelated guidance,
 update moved links, and keep one maintained copy of each entry. Create root
 entry files only when absent and append missing pointers to existing files.
 State whether you are setting up or verifying and repairing the system.
-
-### Populate a newly created root entry
-
-Before running setup, check whether root `AGENTS.md` and `CLAUDE.md` already
-exist and remember which are missing. Setup creates the routing entry points
-but does not discover project-specific instructions. After a successful setup,
-populate a newly created `AGENTS.md` with concise, actionable guidance based on
-[AGENTS.md](https://agents.md/): a brief project overview, setup/build and
-testing commands, code style and testing conventions, and relevant security
-or contribution instructions, where supported by project evidence.
-
-Inspect the project's existing instructions, README, contribution guide,
-manifests, scripts and CI configuration as relevant. Use only confirmed facts
-and commands, including their working directory; do not copy the website's
-example commands or invent policies. Distinguish commands verified from
-source from commands actually run. Omit unsupported topics and report material
-gaps; if no project-specific guidance can be established, report the entry as
-incomplete rather than presenting the routing pointer as a complete guide.
-Keep the existing routing pointer and avoid duplicating folder-level detail.
-
-Do not rewrite or populate a pre-existing entry just because setup was run;
-preserve its existing instructions and managed blocks. If a newly created
-`CLAUDE.md` imports `AGENTS.md`, keep the contents specified by the setup
-rules above and put shared guidance in `AGENTS.md`, not in a second copy. If
-`CLAUDE.md` is an alias, edit only `AGENTS.md`. Do not create an additional
-Claude entry unless selected or enabled by the existing setup rules. After
-populating a new entry, rerun the validator and report failures or unresolved
-evidence; if setup fails, do not populate it.
 
 An existing legacy `agents.md` folder map remains supported. For a requested
 migration, follow [legacy migration](references/validation-and-navigation.md#legacy-migration).
@@ -303,24 +263,14 @@ you updated rather than leaving maintenance for a separate follow-up.
 ## Step 6 — Set up, validate, and navigate
 
 Use Python 3.10 or newer with its standard library; this package has no external
-dependencies. For initial setup, run the setup helper once with the existing
-project root. It creates missing core routing files and validates them. After
-selection, optional flags create the chosen maps; the helper never prompts and
-never overwrites an existing index or map. If an existing index lacks a selected
-map link, repair it when the intended selection is confirmed. For an existing
-router, follow the verification and repair workflow above; for a read-only
-check, run the validator without changing files. When a user selects an additional entry
-point in an existing project, run setup with the corresponding flag; it
-preserves the existing index and other instruction content. Populate any newly
-created root entry as described in Step 1, then validate again. Run the fixture
-suite when developing or updating this skill package. Use the verified package
-from the installation check above. Replace `<skill-dir>` with its actual
+dependencies. Follow [the setup guide](references/setup.md) for the helper and
+selected options. For an existing router, follow the verification and repair
+workflow above; for a read-only check, run the validator without changing files.
+Run the fixture suite when developing or updating this skill package. Use the
+verified package from the installation check above. Replace `<skill-dir>` with its actual
 directory and `<PROJECT_ROOT>` with the project's existing root directory:
 
 ```sh
-python "<skill-dir>/scripts/setup.py" "<PROJECT_ROOT>"  # core only
-# After selection, optionally pass --claude-md, --copilot-instructions,
-# --include-skills, and/or --include-specialists
 python "<skill-dir>/scripts/validate.py" "<PROJECT_ROOT>"
 # Add --claude-md and/or --copilot-instructions to require selected entry points.
 python -B -m unittest discover -s "<skill-dir>/tests" -v
