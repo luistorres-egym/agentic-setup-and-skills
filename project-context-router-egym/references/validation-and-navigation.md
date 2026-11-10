@@ -10,52 +10,17 @@ not guarantee that its scripts are available. Use the verified project package
 for `<skill-dir>`; a read-only check uses the loaded package without installing:
 
 ```text
-python "<skill-dir>/scripts/setup.py" "<PROJECT_ROOT>"
 python "<skill-dir>/scripts/validate.py" "<PROJECT_ROOT>"
 python -B -m unittest discover -s "<skill-dir>/tests" -v
 ```
 
-Setup creates an `AGENTS.md` pointer and `.context-routing/index.md` containing
-the folder table; it does not generate project-specific root instructions.
-After successful setup, follow SKILL.md to populate a newly created entry from
-verified project evidence and validate again. Preserve pre-existing entries.
-After selection, `--claude-md` creates a missing `CLAUDE.md`
-containing only `@AGENTS.md`. Without `CLAUDECODE`, it leaves an existing file
-with that import unchanged; otherwise it adds the index pointer and import.
-`--copilot-instructions` creates or updates `.github/copilot-instructions.md`.
-When `CLAUDECODE` is set, setup adds a Markdown index pointer to an existing
-`CLAUDE.md` if missing, without adding an index import. For compatibility,
-`CLAUDECODE` without the flag creates a missing `CLAUDE.md` with both imports
-and a pointer. The validator accepts a direct index link or `@AGENTS.md`
-backed by a valid root pointer. Its matching flags require selected entry
-points; otherwise unselected files without a pointer are notes.
-When a selected `CLAUDE.md` is a direct symlink to the regular root
-`AGENTS.md`, setup leaves the symlink untouched and updates the shared file
-through `AGENTS.md` only. Other selected symlinks remain unsupported.
-This only concerns setup; test whether the intended agent client follows
-symlinked instruction files before relying on them.
-Setup does not create `agents.md`. After user selection, `--include-skills`
-and `--include-specialists` create optional maps. The helper does not prompt or
-overwrite existing files. For an existing or partial router, run the validator
-first and follow SKILL.md's verification and repair workflow; do not rely on
-setup to repair pre-existing validation failures. Existing indexes may need a
-maintenance edit to link confirmed selected maps. An explicitly read-only
-check reports findings without making repairs.
-
-Setup validates the proposed file contents against the project before writing.
-Validation errors leave files unchanged and distinguish matching pre-existing
-errors from errors introduced by the proposal. Setup checks observed paths again before
-publication and reports detected changes; concurrent edits can still race with
-filesystem operations. If a write or the final validation fails, setup reports
-any files it may have changed. It does not automatically roll back file writes,
-because an independent editor may have changed them; review those files manually.
-New empty directories are removed where possible. A crash can also leave partial
-changes.
-
-GitHub.com Copilot Chat needs the repository attached to use repository-wide
-instructions. A Markdown pointer requests navigation but does not guarantee
-that the surface will load the linked index. Verify this in the intended
-surface; `AGENTS.md` remains the shared entry point for supported agents.
+For setup, selected entry points, and helper failure handling, follow
+[the setup guide](setup.md). The validator accepts a direct index link or
+`@AGENTS.md` backed by a valid root pointer. Its matching flags require selected
+entry points; otherwise unselected files without a pointer are notes. For an
+existing or partial router, run the validator first and follow SKILL.md's
+verification and repair workflow. An explicitly read-only check reports
+findings without making repairs.
 
 Legacy indexes linked to an `agents.md` folder map remain supported with an
 extra-hop note. Nothing is migrated or deleted automatically.
