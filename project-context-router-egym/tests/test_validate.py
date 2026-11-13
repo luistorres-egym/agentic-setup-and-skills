@@ -167,6 +167,33 @@ class ValidateTests(unittest.TestCase):
         errors, _ = validate_module.validate(self.root, require_copilot=True)
         self.assertTrue(any("must link" in e for e in errors), errors)
 
+    def test_commented_links_are_ignored_and_active_link_line_numbers_are_preserved(self):
+        agents = self.root / "AGENTS.md"
+        agents.write_text(
+            "Use `<!--` as literal text.\n"
+            "<!--\n```\n[Removed](missing.md)\n-->\n"
+            "Read [routing](.context-routing/index.md).\n"
+            "[Broken](also-missing.md)\n"
+            "<!-- [Unclosed](unclosed.md)\n[Hidden](hidden.md)\n",
+            encoding="utf-8",
+        )
+        errors, _ = self.result()
+        self.assertFalse(any("missing link destination: missing.md" in error for error in errors), errors)
+        self.assertFalse(any("missing link destination: unclosed.md" in error for error in errors), errors)
+        self.assertFalse(any("missing link destination: hidden.md" in error for error in errors), errors)
+        self.assertTrue(any("AGENTS.md:7: missing link destination: also-missing.md" in error for error in errors), errors)
+
+    def test_commented_context_route_is_not_reported_outside_table(self):
+        index = self.root / ".context-routing" / "index.md"
+        with index.open("a", encoding="utf-8") as stream:
+            stream.write(
+                "\n<!--\n"
+                "| src/has space/ | module | [Context](../src/has%20space/CONTEXT.md) |\n"
+                "-->\n"
+            )
+        errors, _ = self.result()
+        self.assertFalse(any("folder route row is outside a table" in error for error in errors), errors)
+
     def test_context_quality_and_placeholders(self):
         context = self.root / "src" / "has space" / "CONTEXT.md"
         for value in ("", "# Heading\n## More\n", "# Context\n**Purpose**\n**Key files:**\n", "Description <folder path>", "Text <what it does>", "Text <fill this in>", "Text {TODO}", "Text [TODO: add details]"):

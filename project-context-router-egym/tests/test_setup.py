@@ -585,6 +585,17 @@ class SetupTests(unittest.TestCase):
         self.assertEqual(agents.read_bytes(), original)
         self.assertEqual(list(self.root.iterdir()), [agents])
 
+    def test_commented_broken_link_does_not_block_entry_point_addition(self):
+        agents = self.root / "AGENTS.md"
+        agents.write_text("# Existing\n<!-- [Removed](missing.md) -->\n", encoding="utf-8")
+
+        errors, _ = setup_module.setup(self.root)
+
+        self.assertEqual(errors, [])
+        self.assertTrue(validate_module.has_link(
+            agents.read_text(encoding="utf-8"), agents, self.root / ".context-routing" / "index.md"
+        ))
+
     def test_missing_optional_map_link_prevents_creation(self):
         self.assertEqual(setup_module.setup(self.root)[0], [])
         agents = self.root / "AGENTS.md"

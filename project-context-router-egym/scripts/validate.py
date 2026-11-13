@@ -19,22 +19,61 @@ FENCE_RE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
 ABSOLUTE_RE = re.compile(r"^(?:[A-Za-z]:[\\/]|\\\\|/|~(?:[\\/]|$))")
 
 
-def _active_text(text: str) -> str:
-    """Drop fenced examples; preserve line numbers for diagnostics."""
+def _strip_html_comments(line: str, in_comment: bool) -> tuple[str, bool]:
+    active: list[str] = []
+    position = 0
+    while position < len(line):
+        if in_comment:
+            end = line.find("-->", position)
+            if end < 0:
+                active.append(" " * (len(line) - position))
+                return "".join(active), True
+            active.append(" " * (end + 3 - position))
+            position = end + 3
+            in_comment = False
+            continue
+        comment_start = line.find("<!--", position)
+        code_start = line.find("`", position)
+        if code_start >= 0 and (comment_start < 0 or code_start < comment_start):
+            match = re.match(r"(`+).*?\1", line[code_start:])
+            if match:
+                end = code_start + match.end()
+            else:
+                end = code_start
+                while end < len(line) and line[end] == "`":
+                    end += 1
+            active.append(line[position:end])
+            position = end
+            continue
+        if comment_start < 0:
+            active.append(line[position:])
+            break
+        active.extend((line[position:comment_start], " " * 4))
+        position = comment_start + 4
+        in_comment = True
+    return "".join(active), in_comment
+
+
+def _active_text(text: str, *, ignore_comments: bool = False) -> str:
+    """Drop fenced examples and optionally HTML comments; preserve line numbers."""
     lines = text.splitlines()
     active: list[str] = []
     fence_char, fence_size = "", 0
+    in_comment = False
     for line in lines:
-        match = FENCE_RE.match(line)
-        if not fence_char and match:
-            fence_char, fence_size = match.group(1)[0], len(match.group(1))
-            active.append("")
-        elif fence_char:
+        if fence_char:
             close = re.match(r"^\s{0,3}" + re.escape(fence_char) + r"{" + str(fence_size) + r",}\s*$", line)
             if close:
                 fence_char = ""
             active.append("")
+            continue
+        match = FENCE_RE.match(line) if not (ignore_comments and in_comment) else None
+        if not fence_char and match:
+            fence_char, fence_size = match.group(1)[0], len(match.group(1))
+            active.append("")
         else:
+            if ignore_comments:
+                line, in_comment = _strip_html_comments(line, in_comment)
             active.append(line)
     return "\n".join(active)
 
@@ -44,7 +83,7 @@ def _destination(raw: str) -> str:
 
 
 def _links(text: str):
-    for line_number, line in enumerate(_active_text(text).splitlines(), 1):
+    for line_number, line in enumerate(_active_text(text, ignore_comments=True).splitlines(), 1):
         # Remove inline code spans so examples are not treated as active links.
         line = re.sub(r"(`+).*?\1", "", line)
         for match in LINK_RE.finditer(line):
@@ -111,8 +150,6 @@ def _local_path(root: Path, source: Path, dest: str) -> Path | None:
 
 def has_link(text: str, source: Path, target: Path) -> bool:
     """Return whether active inline Markdown links resolve to target."""
-    text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
-    text = re.sub(r"<!--.*\Z", "", text, flags=re.DOTALL)
     return any(_relative_target(source, dest, target) for _, dest in _links(text))
 
 
@@ -352,7 +389,7 @@ def validate(
         return path in texts and any(
             [re.sub(r"\\?\*", "", c).strip().casefold() for c in _table_cells(line)]
             == [c.casefold() for c in columns]
-            for line in _active_text(texts[path]).splitlines()
+            for line in _active_text(texts[path], ignore_comments=True).splitlines()
         )
 
     index_map = has_folder_table(index)
@@ -367,7 +404,7 @@ def validate(
         if map_path not in texts:
             continue
         map_name = map_path.relative_to(root).as_posix()
-        lines = _active_text(texts[map_path]).splitlines()
+        lines = _active_text(texts[map_path], ignore_comments=True).splitlines()
         in_table = False
         for i, line in enumerate(lines):
             if not line.strip() or line.lstrip().startswith("#"):
@@ -384,7 +421,7 @@ def validate(
                     errors.append(f"{map_name}:{i + 1}: folder route row is outside a table")
     if route_map in texts:
         map_name = route_map.relative_to(root).as_posix()
-        lines = _active_text(texts[route_map]).splitlines()
+        lines = _active_text(texts[route_map], ignore_comments=True).splitlines()
         rows, _ = _table_rows(lines, columns, map_name, errors)
         folders: set[str] = set()
         if not rows:
