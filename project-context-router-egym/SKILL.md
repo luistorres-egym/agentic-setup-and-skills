@@ -18,9 +18,10 @@ the router is installed. If the user requests only a read-only check, report
 findings without repairing. Setup creates missing routing files and appends
 root pointers; it preserves existing content and does not infer routes or
 migrate older routing automatically.
-Before initial setup, read and follow [the setup guide](references/setup.md).
-Also read it before adding a selected entry point or optional map to an
-existing project.
+Before initial setup, when adding a selected entry point or optional map, or
+when an existing router has no recorded architecture-overview decision, read
+[the setup guide](references/setup.md).
+For existing routers, follow [the verify-and-repair procedure](references/validation-and-navigation.md#verify-then-repair).
 
 ## Before setup or verification — Install the skill in the project
 
@@ -57,34 +58,6 @@ If installation is unavailable or the source cannot be established, stop before
 setup or repair and report the blocker. Project skill files may be shared with
 collaborators if committed.
 
-## Existing routing — Verify, then repair
-
-Before changing an existing router, inspect its root entries, index or legacy
-folder map, linked contexts, and recorded selections. Run `validate.py`
-against the project first, requiring selected entry points when appropriate.
-Review its errors and notes, and check relevant routes and important context
-claims against project sources; a passing validator does not prove accuracy.
-Record the initial findings so they can be distinguished from changes made
-during repair.
-
-Then repair confirmed problems in place within the requested scope: fix
-verified broken links, stale routes or inaccurate context, and restore missing
-routing components when their intended content is clear. Preserve unrelated
-instructions, managed blocks, existing user selections and legacy routes. Do
-not infer new folder selections, create disputed contexts, remove potentially
-valuable content, or migrate legacy routing without the required user decision.
-Ask when a repair has multiple plausible destinations or would change scope;
-otherwise report unresolved issues and proceed with independent safe repairs.
-Notes about unmarked paths require evidence before treating them as paths.
-Do not rerun setup as a substitute for repairing an invalid existing router:
-its pre-publication validation can reject existing errors.
-
-Rerun the validator after repairs and repeat the applicable source checks and
-navigation walks. Report what was repaired, remaining errors and unverified
-claims, and any required independent review that was unavailable. If
-verification finds no problems, repair is a no-op. If verification cannot run,
-report the blocker and do not claim verification or repair is complete.
-
 ## Step 1 — Establish the routing structure
 
 Use this structure at the project root:
@@ -101,9 +74,8 @@ CLAUDE.md                  # optional
 
 - Root `AGENTS.md` points to `.context-routing/index.md`. Preserve unrelated
   instructions and managed blocks; keep routing tables in the routing folder.
-- `CLAUDE.md` and `.github/copilot-instructions.md` are optional entry points
-  for selected clients. Preserve existing instructions and symlinks; follow
-  the setup guide's entry-point and symlink rules before changing them.
+- `CLAUDE.md` and `.github/copilot-instructions.md` are optional entry points;
+  follow the setup guide for their selection, flags, and preservation rules.
 - `index.md` contains the folder-to-context table, reading order, maintenance
   contract, and links to selected optional maps. It holds routing, not domain detail.
 - `skills.md` optionally routes tasks to selected skills; `specialists.md`
@@ -117,32 +89,13 @@ update moved links, and keep one maintained copy of each entry. Create root
 entry files only when absent and append missing pointers to existing files.
 State whether you are setting up or verifying and repairing the system.
 
-An existing legacy `agents.md` folder map remains supported. For a requested
+Existing legacy `agents.md` folder maps remain supported. For a requested
 migration, follow [legacy migration](references/validation-and-navigation.md#legacy-migration).
 
-When there is no recorded architecture-overview decision, ask whether the user
-wants an `ARCHITECTURE.md`. A direct request counts as selection. Continue
-independent routing work while waiting; create or update the overview only
-after selection. An existing file alone does not establish a decision: inspect
-and preserve it, and ask whether to adopt it. Record the decision outside the
-folder table in `index.md` as `Architecture overview: selected` or
-`Architecture overview: declined`. A previously recorded index link to the
-overview also counts as selection; preserve it unless its removal is authorized.
-Preserve prior decisions and do not ask again unless the user changes the choice.
-
-For a selected overview, add an ordinary Markdown link
-`[Architecture overview](ARCHITECTURE.md)` to the relevant root `AGENTS.md`
-or `CLAUDE.md` entry point, with an instruction to read it when useful to the
-task. If both are used independently, add it to each. If `CLAUDE.md` imports
-or is a direct alias of `AGENTS.md`, the link in `AGENTS.md` is sufficient;
-do not duplicate it or add an `@ARCHITECTURE.md` import. Preserve existing
-instructions, avoid duplicate links, and create the overview before adding
-the link. Do not add a link if the overview is declined.
-
-Use the [architecture overview](references/architecture-overview.md) as the
-template for a selected overview. Replace its examples and placeholders with
-verified project information; distinguish plans and uncertainty from observed
-facts. Preserve unrelated existing content and do not include credentials.
+For initial setup or an existing router without a recorded
+architecture-overview decision, follow the setup guide for root-entry
+population and the decision process. During maintenance, preserve recorded
+decisions and update an adopted overview in the same change when affected.
 
 ## Step 2 — Pick which folders get a CONTEXT.md
 
@@ -262,56 +215,26 @@ you updated rather than leaving maintenance for a separate follow-up.
 
 ## Step 6 — Set up, validate, and navigate
 
-Use Python 3.10 or newer with its standard library; this package has no external
-dependencies. Follow [the setup guide](references/setup.md) for the helper and
-selected options. For an existing router, follow the verification and repair
-workflow above; for a read-only check, run the validator without changing files.
-Run the fixture suite when developing or updating this skill package. Use the
-verified package from the installation check above. Replace `<skill-dir>` with its actual
-directory and `<PROJECT_ROOT>` with the project's existing root directory:
+Follow [the setup guide](references/setup.md) for initial setup or when adding
+a selected entry point or optional map. For existing routers, follow the
+verify-and-repair procedure linked above; for read-only checks, run the
+validator without changing files. Use Python 3.10 or newer and the verified
+package from the installation check above. Replace `<skill-dir>` with its
+actual directory and `<PROJECT_ROOT>` with the project's existing root:
 
 ```sh
 python "<skill-dir>/scripts/validate.py" "<PROJECT_ROOT>"
 # Add --claude-md and/or --copilot-instructions to require selected entry points.
+# Skill development only:
 python -B -m unittest discover -s "<skill-dir>/tests" -v
 ```
 
-Setup validates proposed contents before writing and reports validation errors
-and notes. A write-time failure may leave partial changes; review the reported
-files manually. The validator accepts legacy projects
-with either root entry; unselected optional instruction files without a pointer
-are reported as notes. A `CLAUDE.md` with `@AGENTS.md` is valid when the
-imported root `AGENTS.md` links to the index. Use the corresponding validator
-flags to require optional entry points.
-The validator checks routing files
-and linked context documents, including basic content and declared-path checks.
-It does not establish factual accuracy or discover all unmapped source folders.
 See [validation and navigation](references/validation-and-navigation.md) for
-the checks' Markdown-link limits and a cold navigation walkthrough.
+validator coverage, limitations, and required navigation checks.
 
 ## Step 7 — Verify context quality and report
 
-Check the root pointers, map links, context destinations, and skill locations.
-Check that existing instructions and managed blocks remain intact, and that
-there are no duplicate routes or stale paths. If a skill location is not
-available in this environment, report it as unverified. For deep context,
-record supporting evidence, callers and integrations, validation commands,
-unresolved conflicts, and what can be affected by a change.
-
-After structural validation, use the proportional checks in [validation and
-navigation](references/validation-and-navigation.md). Initial setup, routing
-redesigns and consequential changes need fresh isolated navigation walks and
-quality review. For genuinely small maintenance edits, check affected routes
-and their source evidence; report when independent review was not performed.
-For required independent checks, report unavailable evaluation as pending.
-
-Review scope, duplicated facts, important source claims, change impact, and
-context size. Resolve contradictions against the owning source and record
-uncertainty instead of presenting guesses as verified. A validator pass alone
-does not verify content: applicable checks must pass or limitations remain
-explicit. Preserve the
-user's task scope; a context-quality review does not authorize code refactoring.
-
-Briefly report the routing location, context files created or updated, skill
-entries changed, and any unresolved destinations. Link to files instead of
-dumping their contents.
+Follow the proportional navigation and context-quality checks in [validation
+and navigation](references/validation-and-navigation.md). Report changes,
+validation results, unverified claims, and unresolved destinations; a passing
+validator alone does not establish factual accuracy.

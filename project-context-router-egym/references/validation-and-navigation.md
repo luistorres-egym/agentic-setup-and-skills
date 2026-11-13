@@ -11,16 +11,41 @@ for `<skill-dir>`; a read-only check uses the loaded package without installing:
 
 ```text
 python "<skill-dir>/scripts/validate.py" "<PROJECT_ROOT>"
+```
+
+When developing or updating this skill, also run its fixture suite:
+
+```text
 python -B -m unittest discover -s "<skill-dir>/tests" -v
 ```
 
-For setup, selected entry points, and helper failure handling, follow
-[the setup guide](setup.md). The validator accepts a direct index link or
-`@AGENTS.md` backed by a valid root pointer. Its matching flags require selected
-entry points; otherwise unselected files without a pointer are notes. For an
-existing or partial router, run the validator first and follow SKILL.md's
-verification and repair workflow. An explicitly read-only check reports
-findings without making repairs.
+For setup, selected entry points, Python prerequisites, and helper failure
+handling, follow [the setup guide](setup.md). The validator accepts a direct
+index link or `@AGENTS.md` backed by a valid root pointer. Its matching flags
+require selected entry points; otherwise unselected files without a pointer
+are notes. For an existing or partial router, run the validator first and
+follow the workflow below. An explicitly read-only check reports findings
+without making repairs.
+
+## Verify then repair
+
+Before changing an existing router, inspect its root entries, index or legacy
+folder map, linked contexts, and recorded selections. Run the validator first,
+requiring selected entry points when appropriate. Review errors and notes,
+check relevant routes and claims against project sources, and record initial
+findings so they remain distinct from repairs.
+
+Repair only confirmed problems within the requested scope. Preserve unrelated
+instructions, managed blocks, selections, and legacy routes. Do not invent
+folder selections, create disputed contexts, remove potentially valuable
+content, or migrate without user approval. Ask when a repair is ambiguous;
+otherwise continue safe repairs and report unresolved issues. Verify unmarked
+paths before treating them as paths. Do not rerun setup to repair an invalid
+router: its pre-publication validation can reject existing errors.
+
+Rerun the validator and applicable source checks and navigation walks. Report
+repairs, remaining errors, unverified claims, and unavailable checks. A clean
+verification is a no-op; if checks cannot run, report the blocker.
 
 Legacy indexes linked to an `agents.md` folder map remain supported with an
 extra-hop note. Nothing is migrated or deleted automatically.
