@@ -1,5 +1,16 @@
 ---
 name: project-context-router-egym
+type: skill
+blt_area: EGYM Tech
+department: Marketing Global
+team: Marketing
+function: documentation
+tags:
+  - project-context
+  - routing
+  - agents
+version: 1.0.0
+owner_email: luis.torres@egym.com
 description: Builds and maintains project context routing through AGENTS.md and optional agent-specific pointers to .context-routing/index.md, which maps folders to verified CONTEXT.md files, with optional maps for agreed skills and specialists. Use when setting up or updating project context, routing tables, context maps, or folder-level context files. Also use when a meaningful change to behavior, interfaces, business rules, architecture, or responsibilities affects existing routes.
 ---
 
@@ -226,7 +237,7 @@ actual directory and `<PROJECT_ROOT>` with the project's existing root:
 python "<skill-dir>/scripts/validate.py" "<PROJECT_ROOT>"
 # Add --claude-md and/or --copilot-instructions to require selected entry points.
 # Skill development only:
-python -B -m unittest discover -s "<skill-dir>/tests" -v
+python -B -m unittest discover -s "<skill-dir>/scripts" -v
 ```
 
 See [validation and navigation](references/validation-and-navigation.md) for

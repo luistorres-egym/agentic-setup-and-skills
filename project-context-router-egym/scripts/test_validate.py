@@ -6,7 +6,7 @@ import sys
 from unittest.mock import patch
 
 
-MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "validate.py"
+MODULE_PATH = Path(__file__).resolve().parent / "validate.py"
 SPEC = importlib.util.spec_from_file_location("router_validate", MODULE_PATH)
 validate_module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(validate_module)

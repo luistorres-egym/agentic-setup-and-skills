@@ -16,7 +16,7 @@ python "<skill-dir>/scripts/validate.py" "<PROJECT_ROOT>"
 When developing or updating this skill, also run its fixture suite:
 
 ```text
-python -B -m unittest discover -s "<skill-dir>/tests" -v
+python -B -m unittest discover -s "<skill-dir>/scripts" -v
 ```
 
 For setup, selected entry points, Python prerequisites, and helper failure
