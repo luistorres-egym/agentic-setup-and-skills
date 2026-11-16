@@ -31,6 +31,7 @@ class SetupTests(unittest.TestCase):
         agents = (self.root / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("If an adopted ARCHITECTURE.md is affected, update it in the same change.", index)
         self.assertNotIn("](ARCHITECTURE.md)", agents)
+        self.assertFalse((self.root / "CLAUDE.md").exists())
 
     def test_setup_installs_complete_project_skill_and_reuses_it(self):
         source = SCRIPTS.parent
@@ -56,7 +57,6 @@ class SetupTests(unittest.TestCase):
             capture_output=True, text=True,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(setup_module.setup(self.root)[0], [])
         result = subprocess.run(
             [sys.executable, "-I", "-B", str(alias / "scripts" / "setup.py"), str(self.root)],
             capture_output=True, text=True,
@@ -95,6 +95,9 @@ class SetupTests(unittest.TestCase):
         self.assertTrue((self.root / ".agents" / "skills" / "project-context-router-egym" / "SKILL.md").is_file())
         self.assertTrue((self.root / ".claude" / "skills" / "project-context-router-egym").is_symlink())
         self.assertFalse((self.root / ".github" / "skills" / "project-context-router-egym").exists())
+        text = (self.root / "CLAUDE.md").read_text(encoding="utf-8")
+        self.assertIn("@.context-routing/index.md", text)
+        self.assertIn("[context routing index](.context-routing/index.md)", text)
 
     def test_conflicting_project_skill_is_preserved_without_setup_writes(self):
         destination = self.root / ".agents" / "skills" / "project-context-router-egym"
@@ -164,15 +167,6 @@ class SetupTests(unittest.TestCase):
         self.assertTrue(any("setup may have changed" in e for e in errors), errors)
         self.assertFalse((self.root / ".claude" / "skills" / "project-context-router-egym").exists())
 
-    def test_setup_runs_with_isolated_python(self):
-        result = subprocess.run(
-            [sys.executable, "-I", "-B", str(SCRIPTS / "setup.py"), str(self.root), "--claude-md"],
-            capture_output=True, text=True,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertTrue((self.root / ".context-routing" / "index.md").is_file())
-        self.assertTrue((self.root / "CLAUDE.md").is_file())
-
     def test_cli_selected_entry_points_and_validator(self):
         setup = subprocess.run(
             [sys.executable, "-I", "-B", str(SCRIPTS / "setup.py"), str(self.root),
@@ -180,25 +174,14 @@ class SetupTests(unittest.TestCase):
             capture_output=True, text=True,
         )
         self.assertEqual(setup.returncode, 0, setup.stderr)
+        self.assertTrue((self.root / ".context-routing" / "index.md").is_file())
+        self.assertTrue((self.root / "CLAUDE.md").is_file())
         validate = subprocess.run(
             [sys.executable, "-I", "-B", str(SCRIPTS / "validate.py"), str(self.root),
              "--claude-md", "--copilot-instructions"],
             capture_output=True, text=True,
         )
         self.assertEqual(validate.returncode, 0, validate.stdout + validate.stderr)
-
-    def test_missing_claude_not_created_by_default(self):
-        errors, _ = setup_module.setup(self.root)
-        self.assertEqual(errors, [])
-        self.assertFalse((self.root / "CLAUDE.md").exists())
-        self.assertTrue((self.root / "AGENTS.md").is_file())
-
-    def test_claudecode_env_creates_claude(self):
-        os.environ["CLAUDECODE"] = "1"
-        self.assertEqual(setup_module.setup(self.root)[0], [])
-        text = (self.root / "CLAUDE.md").read_text(encoding="utf-8")
-        self.assertIn("@.context-routing/index.md", text)
-        self.assertIn("[context routing index](.context-routing/index.md)", text)
 
     def test_explicit_false_overrides_env(self):
         os.environ["CLAUDECODE"] = "1"
@@ -450,18 +433,21 @@ class SetupTests(unittest.TestCase):
 
     def test_valid_existing_pointer_is_not_duplicated(self):
         original = b"# Project\n\nSee [routing](./.context-routing/index.md#top).\n"
-        (self.root / "AGENTS.md").write_bytes(original)
-        errors, _ = setup_module.setup(self.root)
-        self.assertEqual(errors, [])
-        self.assertEqual((self.root / "AGENTS.md").read_bytes(), original)
+        addition = setup_module._pointer_addition(
+            original, setup_module._read_templates()[Path("AGENTS.md")],
+            self.root / "AGENTS.md", self.root / ".context-routing" / "index.md",
+            validate_module.has_link,
+        )
+        self.assertEqual(addition, b"")
 
     def test_pointer_mentioned_in_fenced_example_is_not_treated_as_valid(self):
         original = b"# Project\n```markdown\n[example](.context-routing/index.md)\n```\n"
-        (self.root / "AGENTS.md").write_bytes(original)
-        setup_module.setup(self.root)
-        result = (self.root / "AGENTS.md").read_bytes()
-        self.assertTrue(result.startswith(original))
-        self.assertEqual(result.count(b".context-routing/index.md"), 2)
+        template = setup_module._read_templates()[Path("AGENTS.md")]
+        addition = setup_module._pointer_addition(
+            original, template, self.root / "AGENTS.md",
+            self.root / ".context-routing" / "index.md", validate_module.has_link,
+        )
+        self.assertEqual(addition, template)
 
     def test_existing_directory_at_file_target_fails_without_overwriting(self):
         (self.root / "AGENTS.md").mkdir()
