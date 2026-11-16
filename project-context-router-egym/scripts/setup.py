@@ -258,13 +258,12 @@ def setup(
                     contents, pointer, root_file, root / index, has_link
                 )
                 text = contents.decode("utf-8-sig")
-                active = _active_text(text)
-                uncommented = re.sub(r"<!--.*?-->", "", active, flags=re.DOTALL)
-                unclosed = "<!--" in uncommented or not _active_text(text + "\nROUTING_SENTINEL").endswith("\nROUTING_SENTINEL")
+                active = _active_text(text, ignore_comments=True)
+                unclosed = not _active_text(text + "\nROUTING_SENTINEL", ignore_comments=True).endswith("\nROUTING_SENTINEL")
                 if additions[root_file] and unclosed:
                     raise SetupError(f"Cannot append routing pointer to {name}: unclosed fence or HTML comment.")
                 if name == "CLAUDE.md" and not os.environ.get("CLAUDECODE"):
-                    has_import = re.search(r"(?m)^@\.context-routing/index\.md[ \t]*$", re.sub(r"<!--.*\Z", "", uncommented, flags=re.DOTALL))
+                    has_import = re.search(r"(?m)^@\.context-routing/index\.md[ \t]*$", active)
                     if additions[root_file] or not has_import:
                         if unclosed:
                             raise SetupError(f"Cannot append routing import to {name}: unclosed fence or HTML comment.")

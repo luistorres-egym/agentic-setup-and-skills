@@ -184,7 +184,7 @@ HEADING_RE = re.compile(r"^\s*(?:(#{1,6})\s+(.+?)\s*#*|\*\*(.+?)\*\*\s*:?)\s*$")
 
 def _check_context(root: Path, source: Path, text: str, errors: list[str], notes: list[str], exists, is_dir) -> None:
     name = source.relative_to(root).as_posix()
-    active = _active_text(text)
+    active = _active_text(text, ignore_comments=True)
     if not any(line.strip() and not HEADING_RE.match(line) for line in active.splitlines()):
         errors.append(f"{name}: context is empty or heading-only")
     # Keep standalone template markers in code spans; ignore markers embedded in examples.
@@ -462,7 +462,7 @@ def validate(
     for route_map, kind, column in ((skills, "skill", "Skill"), (specialists, "specialist", "Specialist")):
         if route_map not in texts:
             continue
-        lines = _active_text(texts[route_map]).splitlines()
+        lines = _active_text(texts[route_map], ignore_comments=True).splitlines()
         rows, _ = _table_rows(lines, ["When to use", column, "Entry point"], f".context-routing/{route_map.name}", errors)
         identities: set[str] = set()
         if not rows:

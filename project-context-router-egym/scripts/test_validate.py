@@ -204,6 +204,46 @@ class ValidateTests(unittest.TestCase):
         context.write_text("# Context\nGeneric <T>, x<y, <customer>, TODO fix tests.\n```md\n<folder path> [TODO: later]\n```\n", encoding="utf-8")
         self.assertEqual(self.result()[0], [])
 
+    def test_comments_do_not_count_as_context_content(self):
+        context = self.root / "src" / "has space" / "CONTEXT.md"
+        context.write_text("# Context\n<!-- Hidden description -->\n", encoding="utf-8")
+        errors, _ = self.result()
+        self.assertTrue(any("context is empty or heading-only" in error for error in errors), errors)
+
+    def test_context_comments_hide_markers_and_paths_preserving_line_numbers(self):
+        context = self.root / "src" / "has space" / "CONTEXT.md"
+        text = (
+            "# Context\nActual description. Use `<!--` as literal text.\n"
+            "<!--\n<folder path>\n## Key files\n- `./retired.py`\n-->\n"
+        )
+        context.write_text(text, encoding="utf-8")
+        self.assertEqual(self.result()[0], [])
+        context.write_text(text + "## Key files\n- `./missing.py`\n", encoding="utf-8")
+        errors, _ = self.result()
+        self.assertEqual(errors, ["src/has space/CONTEXT.md:9: missing declared path: ./missing.py"])
+
+    def test_commented_optional_route_tables_are_ignored(self):
+        routing = self.root / ".context-routing"
+        with (routing / "index.md").open("a", encoding="utf-8") as stream:
+            stream.write("[Specialists](specialists.md)\n")
+        (routing / "specialists.md").write_text(
+            "| When to use | Specialist | Entry point |\n|---|---|---|\n"
+            "| Active | current | [Entry](../tool/SKILL.md) |\n", encoding="utf-8",
+        )
+        for filename, column in (("skills.md", "Skill"), ("specialists.md", "Specialist")):
+            with self.subTest(filename=filename):
+                header = f"| When to use | {column} | Entry point |\n|---|---|---|\n"
+                retired = header + "| Retired | retired | [Old](../retired.md) |\n"
+                active = header + "| Active | current | [Entry](../tool/SKILL.md) |\n"
+                path = routing / filename
+                path.write_text("<!--\n" + retired + "-->\n\n" + active, encoding="utf-8")
+                self.assertEqual(self.result()[0], [])
+                path.write_text("<!--\n" + retired + "-->\n\n" + retired + "\n" + active, encoding="utf-8")
+                errors, _ = self.result()
+                self.assertTrue(any(filename in error and "same route columns" in error for error in errors), errors)
+                self.assertTrue(any(filename in error and ":9: missing local" in error for error in errors), errors)
+                path.write_text(active, encoding="utf-8")
+
     def test_inline_examples_and_standalone_template_markers(self):
         context = self.root / "src" / "has space" / "CONTEXT.md"
         context.write_text("# Context\nUse `GET /users/<name>` and `tool <command>` for examples.\n", encoding="utf-8")

@@ -355,9 +355,29 @@ class SetupTests(unittest.TestCase):
         self.assertEqual(setup_module.setup(self.root, claude_md=True)[0], [])
         self.assertEqual(target.read_bytes(), result)
 
+    def test_literal_comment_opener_allows_entry_updates_once(self):
+        for relative in ("AGENTS.md", "CLAUDE.md", ".github/copilot-instructions.md"):
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                target = root / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                original = b"Use `<!--` as literal text.\n"
+                target.write_bytes(original)
+                options = {"claude_md": relative == "CLAUDE.md", "copilot_instructions": relative.startswith(".github/")}
+                self.assertEqual(setup_module.setup(root, **options)[0], [])
+                result = target.read_bytes()
+                self.assertTrue(result.startswith(original))
+                self.assertTrue(validate_module.has_link(result.decode(), target, root / ".context-routing/index.md"))
+                self.assertEqual(setup_module.setup(root, **options)[0], [])
+                self.assertEqual(target.read_bytes(), result)
+
     def test_unclosed_fence_or_comment_prevents_writes(self):
         target = self.root / "CLAUDE.md"
-        for original in (b"```\n@.context-routing/index.md\n", b"<!--\n@.context-routing/index.md\n"):
+        for original in (
+            b"```\n@.context-routing/index.md\n",
+            b"<!--\n@.context-routing/index.md\n",
+            b"<!--\n```\n-->\n<!--\n",
+        ):
             with self.subTest(original=original):
                 target.write_bytes(original)
                 errors, _ = setup_module.setup(self.root, claude_md=True)
