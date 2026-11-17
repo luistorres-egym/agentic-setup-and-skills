@@ -32,7 +32,7 @@ migrate older routing automatically.
 Before initial setup, when adding a selected entry point or optional map, or
 when an existing router has no recorded architecture-overview decision, read
 [the setup guide](references/setup.md).
-For existing routers, follow [the verify-and-repair procedure](references/validation-and-navigation.md#verify-then-repair).
+For existing routers, follow the **Verify then repair** procedure in [the validation and navigation guide](references/validation-and-navigation.md).
 
 ## Before setup or verification — Install the skill in the project
 
@@ -101,7 +101,7 @@ entry files only when absent and append missing pointers to existing files.
 State whether you are setting up or verifying and repairing the system.
 
 Existing legacy `agents.md` folder maps remain supported. For a requested
-migration, follow [legacy migration](references/validation-and-navigation.md#legacy-migration).
+migration, follow [legacy migration guidance](references/validation-and-navigation.md).
 
 For initial setup or an existing router without a recorded
 architecture-overview decision, follow the setup guide for root-entry
