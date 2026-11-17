@@ -157,10 +157,10 @@ def setup(
         source = Path(__file__).resolve().parents[1]
         if root == source or root.is_relative_to(source):
             raise SetupError("Project root cannot be inside the skill package.")
-        skill_dir = Path(".agents/skills/project-context-router-egym")
-        alias = root / ".claude/skills/project-context-router-egym"
-        alias_target = "../../.agents/skills/project-context-router-egym"
-        legacy = Path(".github/skills/project-context-router-egym")
+        skill_dir = Path(".agents/skills/project-context-router")
+        alias = root / ".claude/skills/project-context-router"
+        alias_target = "../../.agents/skills/project-context-router"
+        legacy = Path(".github/skills/project-context-router")
 
         def check_skill_alias():
             for parent in (Path(".claude"), Path(".claude/skills")):

@@ -4,13 +4,13 @@ This repository versions my agentic setups and the skills I'm working on.
 
 ## Skills
 
-- [Project Context Router EGYM](project-context-router-egym/SKILL.md) helps
+- [Project Context Router EGYM](project-context-router/SKILL.md) helps
   agents navigate project context through routing maps and folder-level context
-  files. Its [references](project-context-router-egym/references/),
-  [scripts and tests](project-context-router-egym/scripts/) live alongside the skill.
+  files. Its [references](project-context-router/references/),
+  [scripts and tests](project-context-router/scripts/) live alongside the skill.
 
 Run the skill's tests from the repository root:
 
 ```sh
-python3 -B -m unittest discover -s project-context-router-egym/scripts -v
+python3 -B -m unittest discover -s project-context-router/scripts -v
 ```

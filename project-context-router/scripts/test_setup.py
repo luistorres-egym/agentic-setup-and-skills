@@ -35,7 +35,7 @@ class SetupTests(unittest.TestCase):
 
     def test_setup_installs_complete_project_skill_and_reuses_it(self):
         source = SCRIPTS.parent
-        destination = self.root / ".agents" / "skills" / "project-context-router-egym"
+        destination = self.root / ".agents" / "skills" / "project-context-router"
         self.assertEqual(setup_module.setup(self.root)[0], [])
         source_files = {
             p.relative_to(source): p.read_bytes() for p in source.rglob("*")
@@ -45,10 +45,10 @@ class SetupTests(unittest.TestCase):
         installed_files = {p.relative_to(destination): p.read_bytes() for p in destination.rglob("*") if p.is_file()}
         self.assertEqual(installed_files, source_files)
         self.assertFalse((destination / ".git").exists())
-        self.assertIn(b"name: project-context-router-egym\n", installed_files[Path("SKILL.md")])
-        alias = self.root / ".claude" / "skills" / "project-context-router-egym"
+        self.assertIn(b"name: project-context-router\n", installed_files[Path("SKILL.md")])
+        alias = self.root / ".claude" / "skills" / "project-context-router"
         self.assertTrue(alias.is_symlink())
-        self.assertEqual(os.readlink(alias), "../../.agents/skills/project-context-router-egym")
+        self.assertEqual(os.readlink(alias), "../../.agents/skills/project-context-router")
         self.assertEqual(alias.resolve(), destination.resolve())
         self.assertEqual(setup_module.setup(self.root)[0], [])
         self.assertEqual(installed_files, {p.relative_to(destination): p.read_bytes() for p in destination.rglob("*") if p.is_file()})
@@ -79,7 +79,7 @@ class SetupTests(unittest.TestCase):
         self.assertFalse((project / ".agents").exists())
 
     def test_existing_project_skill_allows_runtime_cache_and_finder_metadata(self):
-        destination = self.root / ".agents" / "skills" / "project-context-router-egym"
+        destination = self.root / ".agents" / "skills" / "project-context-router"
         self.assertEqual(setup_module.setup(self.root)[0], [])
         (destination / ".DS_Store").write_bytes(b"finder metadata")
         cache = destination / "scripts" / "__pycache__"
@@ -92,15 +92,15 @@ class SetupTests(unittest.TestCase):
         os.environ["CLAUDECODE"] = "1"
         errors, _ = setup_module.setup(self.root)
         self.assertEqual(errors, [])
-        self.assertTrue((self.root / ".agents" / "skills" / "project-context-router-egym" / "SKILL.md").is_file())
-        self.assertTrue((self.root / ".claude" / "skills" / "project-context-router-egym").is_symlink())
-        self.assertFalse((self.root / ".github" / "skills" / "project-context-router-egym").exists())
+        self.assertTrue((self.root / ".agents" / "skills" / "project-context-router" / "SKILL.md").is_file())
+        self.assertTrue((self.root / ".claude" / "skills" / "project-context-router").is_symlink())
+        self.assertFalse((self.root / ".github" / "skills" / "project-context-router").exists())
         text = (self.root / "CLAUDE.md").read_text(encoding="utf-8")
         self.assertIn("@.context-routing/index.md", text)
         self.assertIn("[context routing index](.context-routing/index.md)", text)
 
     def test_conflicting_project_skill_is_preserved_without_setup_writes(self):
-        destination = self.root / ".agents" / "skills" / "project-context-router-egym"
+        destination = self.root / ".agents" / "skills" / "project-context-router"
         destination.mkdir(parents=True)
         skill = destination / "SKILL.md"
         skill.write_bytes(b"existing skill\n")
@@ -114,7 +114,7 @@ class SetupTests(unittest.TestCase):
         parent = self.root / ".agents" / "skills"
         parent.mkdir(parents=True)
         try:
-            (parent / "project-context-router-egym").symlink_to(SCRIPTS.parent, target_is_directory=True)
+            (parent / "project-context-router").symlink_to(SCRIPTS.parent, target_is_directory=True)
         except (OSError, NotImplementedError):
             self.skipTest("Directory symlinks are unavailable")
         errors, _ = setup_module.setup(self.root)
@@ -126,7 +126,7 @@ class SetupTests(unittest.TestCase):
         for location in (".github", ".claude"):
             with self.subTest(location=location), tempfile.TemporaryDirectory() as temp:
                 root = Path(temp)
-                existing = root / location / "skills" / "project-context-router-egym"
+                existing = root / location / "skills" / "project-context-router"
                 existing.mkdir(parents=True)
                 (existing / "SKILL.md").write_text("keep", encoding="utf-8")
                 errors, _ = setup_module.setup(root)
@@ -138,7 +138,7 @@ class SetupTests(unittest.TestCase):
     def test_wrong_claude_alias_is_rejected(self):
         parent = self.root / ".claude" / "skills"
         parent.mkdir(parents=True)
-        alias = parent / "project-context-router-egym"
+        alias = parent / "project-context-router"
         try:
             alias.symlink_to("missing", target_is_directory=True)
         except (OSError, NotImplementedError):
@@ -165,7 +165,7 @@ class SetupTests(unittest.TestCase):
             errors, _ = setup_module.setup(self.root)
         self.assertTrue(any("symlinks unavailable" in e for e in errors), errors)
         self.assertTrue(any("setup may have changed" in e for e in errors), errors)
-        self.assertFalse((self.root / ".claude" / "skills" / "project-context-router-egym").exists())
+        self.assertFalse((self.root / ".claude" / "skills" / "project-context-router").exists())
 
     def test_cli_selected_entry_points_and_validator(self):
         setup = subprocess.run(

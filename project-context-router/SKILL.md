@@ -1,5 +1,5 @@
 ---
-name: project-context-router-egym
+name: project-context-router
 type: skill
 blt_area: EGYM Tech
 department: Marketing Global
@@ -45,9 +45,9 @@ files or download an unspecified version.
 
 For setup or repair, install this complete skill automatically in the project
 before routing work. Do not ask the user to choose an installation scope.
-Keep one shared copy in `.agents/skills/project-context-router-egym/`.
-Create `.claude/skills/project-context-router-egym` as a relative symlink to
-`../../.agents/skills/project-context-router-egym` so Claude Code can discover
+Keep one shared copy in `.agents/skills/project-context-router/`.
+Create `.claude/skills/project-context-router` as a relative symlink to
+`../../.agents/skills/project-context-router` so Claude Code can discover
 the same copy. This layout does not depend on which client runs setup. For any
 client, verify discovery rather than assuming it supports this layout.
 

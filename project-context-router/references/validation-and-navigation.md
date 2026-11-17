@@ -4,7 +4,7 @@
 
 Use Python 3.10 or newer; the package uses only the standard library. First
 follow the installation instructions in SKILL.md: setup and repair install the
-complete skill in `.agents/skills/project-context-router-egym/` and create a
+complete skill in `.agents/skills/project-context-router/` and create a
 relative per-skill alias under `.claude/skills/`. A loaded instruction alone does
 not guarantee that its scripts are available. Use the verified project package
 for `<skill-dir>`; a read-only check uses the loaded package without installing:
